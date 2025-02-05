@@ -1,0 +1,11 @@
+Notas:
+
+BD - 23/11/27
+Tabla proyectos - calificacion_final_promedio | float | null
+
+
+
+1. cuando un juez ya voto en un empate, no debería poder volver a votar si ya emitio su voto
+2. si solo un juez vota, el botón de publicar ganadores ya manda y lo hace. Se debe revisar que en caso de empate ya todos hayan resuelto las cosas
+3. cuando un juez ya emitio el voto por una persona en sesión, marca error por sintaxis y no por otra
+4. cuando se emite el voto de los casos de empate, se manda a la tabla ganadores
