@@ -16,72 +16,61 @@ Antes de comenzar, asegúrate de tener lo siguiente instalado:
 
 - Docker
 - Docker Compose
+- Composer
+- Node.js y npm
 
 ## Instalación y Configuración
 
-### 1. Descargar la Imagen desde Docker Hub
+### 1. Descargar el Proyecto desde GitHub
 
-Para ejecutar la aplicación localmente usando Docker, primero necesitas descargar la imagen desde Docker Hub. Abre tu terminal y ejecuta:
+Para comenzar, clona el repositorio desde GitHub. Abre tu terminal y ejecuta el siguiente comando:
 
-docker pull eac1381/todolist
 
-### 2. Ejecutar la Aplicación con Docker Compose
+git clone https://github.com/earaos1381/ToDoList.git
+cd ToDoList
 
-Una vez descargada la imagen, puedes iniciar la aplicación usando Docker Compose. En tu terminal, navega hasta el directorio donde quieres ejecutar el proyecto y crea un archivo `docker-compose.yml` con el siguiente contenido:
+### 2. Instalar Dependencias
 
-version: '3.8'
+Para instalar las dependencias necesarias para el proyecto, primero debes usar Composer para PHP y npm para Vue. Ejecuta los siguientes comandos en tu terminal, dentro del directorio del proyecto:
 
-services:
-  app:
-    image: eac1381/todolist2:latest
-    container_name: todolist_app
-    ports:
-      - "8000:80"
-    environment:
-      - APP_ENV=local
-      - APP_DEBUG=true
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_DATABASE=todolist
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
-    depends_on:
-      - db
-    volumes:
-      - .:/var/www/html
+**Instalar dependencias de PHP:**
 
-  db:
-    image: mariadb:10.5
-    container_name: todolist_db
-    environment:
-      MYSQL_DATABASE: todolist
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-      - ./bd.sql:/docker-entrypoint-initdb.d/bd.sql
-volumes:
-  dbdata:
+composer install
 
-  ### 3. Ejecutar la Aplicación
+**Instalar dependencias de NODE:**
 
-Una vez que tengas listo el archivo `docker-compose.yml`, ejecuta el siguiente comando en el mismo directorio donde se encuentra el archivo:
+npm install
 
-docker-compose up
+### 4. Configurar el Archivo `.env`
 
-### 4. Acceder a la Aplicación
+Una vez que hayas instalado todas las dependencias, debes configurar el archivo `.env` para que el proyecto funcione correctamente. Si no tienes un archivo `.env`, copia el archivo de ejemplo `.env.example`:
 
-Cuando los contenedores estén en funcionamiento, podrás acceder a la aplicación ToDoList en tu navegador, usando la siguiente URL:
+A continuación, abre el archivo `.env` y realiza las siguientes modificaciones:
 
-http://localhost:8000
+5. **Configuración de la base de datos**:
+   Asegúrate de que la base de datos esté configurada correctamente. Modifica los siguientes valores:
 
-### 5. Detener y Eliminar los Contenedores
+DB_CONNECTION=mysql DB_HOST=127.0.0.1 # O usa 'db' si usas Docker 
+DB_PORT=3306 
+DB_DATABASE=todolist 
+DB_USERNAME=root 
+DB_PASSWORD=root
 
-Cuando hayas terminado de trabajar con la aplicación y quieras detener los contenedores, ejecuta el siguiente comando:
+- **DB_HOST**: Si estás ejecutando la base de datos localmente, usa `127.0.0.1`. Si estás usando Docker, asegúrate de usar el nombre del servicio del contenedor de la base de datos (en este caso, `db`).
 
-docker-compose down
+6. **Configurar el Driver de Sesiones**:
+Asegúrate de que el sistema de sesiones esté configurado para usar la base de datos. Cambia el valor de `SESSION_DRIVER` a `database`:
 
+Esto permite que Laravel maneje las sesiones a través de la base de datos, lo que es útil si estás usando Docker para la gestión de sesiones en lugar de archivos locales.
+
+Con estos cambios, tu archivo `.env` estará listo para usarse con la base de datos y el sistema de gestión de sesiones.
+
+### 7. Ejecutar el Proyecto
+
+Con el archivo `.env` configurado correctamente, ya puedes ejecutar el proyecto. Para hacerlo, sigue estos pasos:
+
+usa los comandos de npm run dev, y posterior en otra terminal el php artisan serve para emular la plataforma en linea y poder entrar 
+con la direccionde 127.0.0.1
 
 
 ## Decisiones Técnicas
