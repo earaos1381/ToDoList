@@ -1,0 +1,37 @@
+services:
+  app:
+    build: .
+    container_name: todolist_app
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:fSI9c2WfJjd6uGq0Dk3iFpc2KuKDoaBIJ5aLtXtLV5o=
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=todolist
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+
+  db:
+    image: mariadb:10.5
+    container_name: todolist_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: todolist
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./bd.sql:/docker-entrypoint-initdb.d/bd.sql  # Aquí se copia el archivo SQL
+    ports:
+      - "3306:3306"
+
+volumes:
+  dbdata:
