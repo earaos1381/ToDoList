@@ -3,19 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Preguntas;
-use App\Models\Respuestas;
 use App\Models\TaskType;
-use App\Models\Calificacion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TypesController extends Controller
 {
-    public function types()
-    {
-        return view('admin.preguntas');
-    }
 
     public function get()
     {

@@ -1,0 +1,114 @@
+
+services:
+  app:
+    image: eac1381/todolist_app:v1
+    #build: .
+    container_name: todolist_app
+    restart: always
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html
+    ports:
+      - "8000:80"
+    depends_on:
+      - db1
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:fSI9c2WfJjd6uGq0Dk3iFpc2KuKDoaBIJ5aLtXtLV5o=
+      - DB_HOST=db1
+      - DB_HOST_READ=db2,db3
+      - DB_HOST_WRITE=db1
+      - DB_DATABASE=todolist
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    networks:
+      - galera_network  # Conectar al clúster de red de Galera
+
+  db1:
+    image: mariadb:10.5
+    container_name: galera_db1
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    command:
+      [
+        "mysqld",
+        "--wsrep_on=ON",
+        "--wsrep_provider=/usr/lib/galera/libgalera_smm.so",
+        "--wsrep_cluster_name=galera_cluster",
+        "--wsrep_cluster_address=gcomm://",
+        "--wsrep_node_name=db1",
+        "--wsrep_sst_method=rsync",
+        "--default_storage_engine=InnoDB",
+        "--innodb_autoinc_lock_mode=2",
+        "--binlog_format=ROW"
+      ]
+    volumes:
+      - dbdata1:/var/lib/mysql
+      - ./bd.sql:/docker-entrypoint-initdb.d/bd.sql
+    ports:
+      - "3307:3306"
+    networks:
+      - galera_network  # Conectar a la red
+
+  db2:
+    image: mariadb:10.5
+    container_name: galera_db2
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    command:
+      [
+        "mysqld",
+        "--wsrep_on=ON",
+        "--wsrep_provider=/usr/lib/galera/libgalera_smm.so",
+        "--wsrep_cluster_name=galera_cluster",
+        "--wsrep_cluster_address=gcomm://db1",  # Se conecta a db1
+        "--wsrep_node_name=db2",
+        "--wsrep_sst_method=rsync",
+        "--default_storage_engine=InnoDB",
+        "--innodb_autoinc_lock_mode=2",
+        "--binlog_format=ROW"
+      ]
+    volumes:
+      - dbdata2:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    networks:
+      - galera_network  # Conectar a la red
+
+  db3:
+    image: mariadb:10.5
+    container_name: galera_db3
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    command:
+      [
+        "mysqld",
+        "--wsrep_on=ON",
+        "--wsrep_provider=/usr/lib/galera/libgalera_smm.so",
+        "--wsrep_cluster_name=galera_cluster",
+        "--wsrep_cluster_address=gcomm://db1,db2",  # Se conecta a db1 y db2
+        "--wsrep_node_name=db3",
+        "--wsrep_sst_method=rsync",
+        "--default_storage_engine=InnoDB",
+        "--innodb_autoinc_lock_mode=2",
+        "--binlog_format=ROW"
+      ]
+    volumes:
+      - dbdata3:/var/lib/mysql
+    ports:
+      - "3309:3306"
+    networks:
+      - galera_network  # Conectar a la red
+
+volumes:
+  dbdata1:
+  dbdata2:
+  dbdata3:
+
+networks:
+  galera_network:  # Crear la red personalizada
+    driver: bridge

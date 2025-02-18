@@ -334,10 +334,10 @@ export default {
 
         obtenerUsuarios() {
             this.incrementarCarga();
-            axios.get('/obtenerUsers')
+            axios.get('/Users/get')
                 .then((response) => {
-                    if (response.data.user) {
-                        this.users = response.data.user;
+                    if (response.data.data) {
+                        this.users = response.data.data;
                         this.calcularTotalPaginas();
                     } else {
                         Swal.fire('Error', response.data.message, 'error');
@@ -367,7 +367,7 @@ export default {
                 password: this.password,
             };
 
-            axios.post('/agregarUsuario', nuevoUsuario)
+            axios.post('/Users/agregarUsuario', nuevoUsuario)
                 .then(response => {
                     if (response.data.success) {
                         Swal.fire('Éxito', response.data.message, 'success');
@@ -395,7 +395,7 @@ export default {
             this.bandera = 1;
             this.abrirModalUsuario();
 
-            axios.get("/detalleUsuario/" + id)
+            axios.get("/Users/detalleUsuario/" + id)
                 .then((response) => {
                     const user = response.data;
                     this.name = user.name;
@@ -422,7 +422,7 @@ export default {
                 password: this.password,
             };
 
-            axios.put(`/editarUsuario`, data)
+            axios.put(`/Users/editarUsuario`, data)
                 .then((response) => {
                     if (response.data.success) {
                         Swal.fire('Éxito', response.data.message, 'success');
@@ -460,7 +460,7 @@ export default {
                 }).then((result) => {
                     if (result.isConfirmed) {
                         this.incrementarCarga();
-                        axios.delete("/eliminarUsuario/" + id)
+                        axios.delete("/Users/eliminarUsuario/" + id)
                         .then(response => {
                             Swal.fire('Éxito', response.data.message, 'success');
                             this.obtenerUsuarios();
@@ -497,7 +497,7 @@ export default {
             this.idRolesSeleccionado = idRol;
             this.abrirModalRoles();
 
-        axios.get(`/obtenerRolesUsuario/${this.idro}`)
+        axios.get(`/Users/obtenerRolesUsuario/${this.idro}`)
                 .then((response) => {
                 const rolesAsignados = response.data.roles;
 
@@ -525,7 +525,7 @@ export default {
 
                 this.incrementarCarga();
 
-        axios.get('/obtenerRoles')
+        axios.get('/Roles/obtenerRoles')
             .then((response) => {
                     if (response.data.role) {
                         this.roles = response.data.role;
@@ -549,7 +549,7 @@ export default {
         asignarRoles() {
             const idUser = this.idRolesSeleccionado;
 
-            axios.post('/asignarRoles', { idUser, selectedRoles: this.selectedRoles })
+            axios.post('/Users/asignarRoles', { idUser, selectedRoles: this.selectedRoles })
                 .then(response => {
                     if (response.data.success) {
                         Swal.fire('Éxito', 'Roles asignados correctamente.', 'success');

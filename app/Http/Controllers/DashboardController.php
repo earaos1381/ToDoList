@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Task;
-use Illuminate\Support\Str;
+use App\Models\User;
 use Exception;
+use Carbon\Carbon;
+
 use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
@@ -33,16 +32,82 @@ class DashboardController extends Controller
 
             $user = Auth::user();
 
-            $tasks = Task::whereRaw("FIND_IN_SET(?, user_assignments)", [$user->id])->get();
+            $tasks = Task::where('user_assignments', $user->id)
+                        ->with('user')
+                        ->get();
 
-            Log::info('DashboardController@getTask - tasks: ' . json_encode($tasks));
+            $sharedTasks = DB::table('shared_tasks')
+                            ->where('user_id', $user->id)
+                            ->pluck('task_id');
 
-            return response()->json(['data' => $tasks], 200);
+            $sharedTaskDetails = Task::whereIn('id', $sharedTasks)
+                                    ->with('user')
+                                    ->get();
+
+            $allTasks = $tasks->merge($sharedTaskDetails);
+            $allTasks = $allTasks->sortByDesc('created_at');
+
+            // Filtrar tareas que están por vencer
+            $tasksAboutToExpire = $allTasks->filter(function ($task) {
+                $dueDate = Carbon::parse($task->due_date);
+                $daysLeft = $dueDate->diffInDays(now());
+
+                return $daysLeft <= 3 && $dueDate->isFuture();
+            });
+
+            $tasksAboutToExpire = $tasksAboutToExpire->values()->toArray();
+
+            return response()->json(['data' => $allTasks, 'tasksAboutToExpire' => $tasksAboutToExpire], 200);
+
         } catch (\Exception $e) {
             Log::error('DashboardController@getTask - error: ' . $e->getMessage());
             return response()->json(['message' => 'Error al obtener los datos: ' . $e->getMessage()], 500);
         }
     }
+
+    public function getU()
+    {
+        try {
+            Log::info('UserController@get');
+            $users = User::all();
+
+            if ($users->isEmpty()) {
+                return response()->json(['message' => 'No hay usuarios']);
+            }
+
+            $usersRoles = $users->map(function($user) {
+
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ];
+            });
+            return response()->json(['data' => $usersRoles]);
+        } catch (\Exception $e) {
+            Log::error('UserController@get - error: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    public function getAssigned($taskId)
+    {
+        try {
+            Log::info('DashboardController@getAssignedUsers');
+
+            // Obtener los usuarios asignados a la tarea
+            $assignedUsers = DB::table('shared_tasks')
+                ->where('task_id', $taskId)
+                ->pluck('user_id');  // Devuelve una colección de los IDs de usuarios
+
+            return response()->json($assignedUsers, 200);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener los usuarios asignados: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al obtener los usuarios asignados'], 500);
+        }
+    }
+
 
     public function createTask(Request $request)
     {
@@ -64,21 +129,20 @@ class DashboardController extends Controller
         DB::beginTransaction();
 
         try {
-            // Crear la tarea
-            $task = Task::create($request->only([
-                'title', 'description', 'due_date', 'priority_id', 'status_id', 'task_type_id', 'category_id'
-            ]));
-
-            // Si hay usuarios asignados, los convertimos a JSON y los guardamos
-            if ($request->has('assigned_users')) {
-                // Convertimos el array de IDs a una cadena con comas
-                $task->user_assignments = implode(',', $request->assigned_users);
-                $task->save();
-            }
+            // Crear la tarea con el usuario que la registra
+            $task = Task::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'due_date' => $request->due_date,
+                'priority_id' => $request->priority_id,
+                'status_id' => $request->status_id,
+                'task_type_id' => $request->task_type_id,
+                'category_id' => $request->category_id,
+                'user_assignments' => Auth::id(),
+            ]);
 
             DB::commit();
 
-            // Log de éxito
             Log::info('DashboardController@createTask - task: ' . json_encode($task));
 
             return response()->json([
@@ -90,6 +154,7 @@ class DashboardController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear tarea: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Hubo un error al crear la tarea. Por favor, intente nuevamente.'
@@ -140,9 +205,6 @@ class DashboardController extends Controller
                 'status_id' => $request->status_id,
                 'task_type_id' => $request->task_type_id,
                 'category_id' => $request->category_id,
-                'user_assignments' => is_array($request->assigned_users)
-                    ? implode(',', $request->assigned_users)
-                    : $request->assigned_users
             ]);
 
             Log::info('DashboardController@updateTask - Tarea actualizada correctamente');
@@ -188,6 +250,61 @@ class DashboardController extends Controller
             ], 500);
         }
     }
+
+    public function shareTask(Request $request)
+    {
+        try {
+            Log::info('DashboardController@shareTask');
+
+            $rules = [
+                'task_id' => 'required|exists:tasks,id',
+            ];
+
+            if (!empty($request->user_ids)) {
+                $rules['user_ids'] = 'required|array';
+                $rules['user_ids.*'] = 'exists:users,id';
+            }
+
+            $request->validate($rules);
+
+            $task = Task::findOrFail($request->task_id);
+
+            if (empty($request->user_ids)) {
+                DB::table('shared_tasks')->where('task_id', $task->id)->delete();
+            } else {
+                $currentAssignedUsers = DB::table('shared_tasks')
+                    ->where('task_id', $task->id)
+                    ->pluck('user_id')
+                    ->toArray();
+
+                $usersToRemove = array_diff($currentAssignedUsers, $request->user_ids);
+
+                DB::table('shared_tasks')
+                    ->where('task_id', $task->id)
+                    ->whereIn('user_id', $usersToRemove)
+                    ->delete();
+
+                $usersToAdd = array_diff($request->user_ids, $currentAssignedUsers);
+
+                foreach ($usersToAdd as $userId) {
+                    DB::table('shared_tasks')->insert([
+                        'task_id' => $task->id,
+                        'user_id' => $userId,
+                    ]);
+                }
+            }
+
+            return response()->json(['message' => 'Tarea compartida exitosamente'], 200);
+        } catch (\Exception $e) {
+            Log::error('Error al compartir tarea: ' . $e->getMessage());
+            return response()->json(['message' => 'Error al compartir la tarea'], 500);
+        }
+    }
+
+
+
+
+
 
 
 }

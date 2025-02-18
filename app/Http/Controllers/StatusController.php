@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Status;
-use App\Models\Proyectos;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -12,16 +11,6 @@ use Illuminate\Support\Facades\Log;
 class StatusController extends Controller
 {
 
-    public function status()
-    {
-        $roles = session('user_role', []);
-        $permisos = session('user_permisos', []);
-
-        return view('admin.carreras', [
-            'rolesGranted' => $roles,
-            'permisosGranted' => $permisos,
-        ]);
-    }
 
     public function get()
     {

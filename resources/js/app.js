@@ -23,9 +23,6 @@ app.component('permisos-vue', Permisos);
 import Roles from './vue/admin/Roles.vue';
 app.component('roles-vue', Roles);
 
-import Respaldos from './vue/admin/Respaldos.vue';
-app.component('respaldos-vue', Respaldos);
-
 import Password from './vue/admin/CambiasPassword.vue';
 app.component('password-vue', Password);
 

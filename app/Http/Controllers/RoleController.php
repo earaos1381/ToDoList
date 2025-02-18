@@ -17,8 +17,8 @@ class RoleController extends Controller
         $permisos = session('user_permisos', []);
 
         return view('admin.roles', [
-            'roles' => $roles,
-            'permisos' => $permisos,
+            'rolesGranted' => $roles,
+            'permisosGranted' => $permisos,
         ]);
     }
 

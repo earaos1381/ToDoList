@@ -11,14 +11,16 @@
             </h4>
 
             <div class="card">
-                <h5 class="card-header">Lista de Tareas</h5>
 
                 <div class="card-body d-flex align-items-center justify-content-between">
-                    <div class="nav-item d-flex align-items-center w-75">
-                        <i class="bx bx-search fs-4 lh-0"></i>
-                        <input  type="text" class="form-control border-0 shadow-none" placeholder="Buscar..." aria-label="Buscar..."/>
+                    <h5 class="card-header mb-0"> Mis Tareas</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <!-- <div class="input-group w-50">
+                            <span class="input-group-text"><i class="bx bx-search"></i></span>
+                            <input v-model="filtro" class="form-control" placeholder="Buscar">
+                        </div> &nbsp; -->
+                        <button type="button" class="btn btn-dark" @click="nuevo"><i class='bx bx-plus-medical'></i> Agregar</button>
                     </div>
-                    <button type="button" class="btn btn-dark" @click="nuevo">Agregar</button>
                 </div>
 
                 <div class="table-responsive text-nowrap">
@@ -32,7 +34,8 @@
                                 <th><i class='bx bx-category-alt'></i> Estatus</th>
                                 <th><i class='bx bxs-select-multiple' ></i> Tipo de Tarea</th>
                                 <th><i class='bx bx-list-ul'></i> Categoria</th>
-                                <th><i class='bx bxs-user-detail' ></i> Asignación</th>
+                                <th><i class='bx bxs-user-rectangle'></i> Propietario</th>
+                                <th><i class='bx bxs-user-detail' ></i> Usuarios Asignados</th>
                                 <th>Opciones</th>
                             </tr>
                         </thead>
@@ -43,7 +46,7 @@
 
                             <!-- Iterar sobre las tareas y mostrar cada una en una fila -->
                             <tr v-for="task in listTask" :key="task.id">
-                                <td>{{ task.title }}</td>
+                                <td class="datos-columna">{{ task.title }}</td>
                                 <td class="datos-columna">{{ task.description || 'Sin descripción' }}</td>
                                 <td>
                                     <span v-if="task.priority_id"
@@ -81,24 +84,20 @@
                                 </td>
                                 <td>
                                     <span v-if="task.user_assignments">
-                                        <ul>
-                                            <li v-for="userId in task.user_assignments.split(',')" :key="userId">
-                                                {{ getUserNameById(users, parseInt(userId)) }}
-                                            </li>
-                                        </ul>
+                                        {{ task.user.name }}
                                     </span>
                                     <span v-else class="text-muted">No asignado</span>
                                 </td>
-                                <!-- <td>
-                                    <button @click="editTask(task.id)" class="btn-edit">Editar</button>
-                                    <button @click="deleteTask(task.id)" class="btn-delete">Eliminar</button>
-                                </td> -->
-
                                 <td>
-                                    <button class="btn btn-edit btn-sm" title="Editar" @click="editTask(task.id)">
+                                    <button class="btn btn-dark" title="Share Task" @click="shareTaskModal(task.id)">
+                                        <i class='bx bxs-share-alt'></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-edit" title="Editar" @click="editTask(task.id)">
                                         <i class="bx bx-edit"></i>
                                         </button>&nbsp;
-                                    <button class="btn btn-delete btn-sm"  title="Eliminar" @click="deleteTask(task.id)">
+                                    <button class="btn btn-delete"  title="Eliminar" @click="deleteTask(task.id)">
                                         <i class="bx bxs-trash"></i>
                                     </button>
                                 </td>
@@ -106,117 +105,161 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <!-- Agregamos el modal -->
-            <div id="modal" class="modal fade" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title"><i class="bx bx-task"></i> Nueva Tarea</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="mb-3 floating-label">
-                                            <input v-model="task.title" class="form-control" placeholder=" " required />
-                                            <label for="task.title">Nombre de la Tarea</label>
-                                            <div v-if="!task.title" class="text-danger">Este campo es obligatorio.</div>
+                <!-- Modal Task -->
+                <div id="modal" class="modal fade custom-modal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title"><i class="bx bx-task"></i> {{ modalTitle }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input v-model="task.title" class="form-control" placeholder="Nombre de la tarea" required>
+                                                <label>Título de la Tarea</label>
+                                            </div>
+                                            <div v-if="!task.title" class="text-danger mt-1">Este campo es obligatorio.</div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="mb-3 floating-label">
-                                            <input v-model="task.description" class="form-control" placeholder=" " required />
-                                            <label for="task.description">Descripción</label>
-                                            <div v-if="!task.description" class="text-danger">Este campo es obligatorio.</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Fecha de Vencimiento</label>
-                                    <input type="date" class="form-control" v-model="task.due_date" required>
-                                    <div v-if="!task.due_date" class="text-danger">Este campo es obligatorio.</div>
-                                </div>
 
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="floating-label-select">
-                                            <select class="form-control" v-model="task.priority_id">
-                                                <option disabled selected>Seleccionar</option>
-                                                <option v-for="priority in priorities" :key="priority.id" :value="priority.id">
-                                                    {{ priority.description }}
-                                                </option>
-                                            </select>
-                                            <label for="grupo">Prioridad</label>
-                                            <div v-if="!task.priority_id" class="text-danger">Este campo es obligatorio.</div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating">
+                                                <input type="date" class="form-control" v-model="task.due_date" placeholder="Fecha de Vencimiento" required>
+                                                <label>&nbsp;Fecha de Vencimiento</label>
+                                            </div>
+                                            <div v-if="!task.due_date" class="text-danger mt-1">Este campo es obligatorio.</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="floating-label-select">
-                                            <select class="form-control" v-model="task.status_id">
-                                                <option disabled selected>Seleccionar</option>
-                                                <option v-for="status in statuses" :key="status.id" :value="status.id">
-                                                    {{ status.name }}
-                                                </option>
-                                            </select>
-                                            <label for="grupo">Estatus</label>
-                                            <div v-if="!task.status_id" class="text-danger">Este campo es obligatorio.</div>
+
+                                    <!-- Descripción (Ocupa toda la fila) -->
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-12">
+                                            <div class="form-floating">
+                                                <textarea v-model="task.description" class="form-control" placeholder="Descripción" style="height: 120px;" required></textarea>
+                                                <label>Descripción de la Tarea</label>
+                                            </div>
+                                            <div v-if="!task.description" class="text-danger mt-1">Este campo es obligatorio.</div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <div class="floating-label-select">
-                                            <select class="form-control" v-model="task.task_type_id">
-                                                <option disabled selected>Seleccionar</option>
-                                                <option v-for="type in types" :key="type.id" :value="type.id">
-                                                    {{ type.name }}
-                                                </option>
-                                            </select>
-                                            <label for="grupo">Tipo de Tarea</label>
-                                            <div v-if="!task.task_type_id" class="text-danger">Este campo es obligatorio.</div>
+
+                                    <!-- Prioridad y Estatus -->
+                                    <div class="row g-3 mt-2 row-cols-md-2">
+                                        <div class="col">
+                                            <div class="form-floating">
+                                                <select class="form-select" v-model="task.priority_id">
+                                                    <option disabled selected>Seleccionar</option>
+                                                    <option v-for="priority in priorities" :key="priority.id" :value="priority.id">
+                                                        {{ priority.description }}
+                                                    </option>
+                                                </select>
+                                                <label>Prioridad</label>
+                                            </div>
+                                            <div v-if="!task.priority_id" class="text-danger mt-1">Este campo es obligatorio.</div>
+                                        </div>
+
+                                        <div class="col">
+                                            <div class="form-floating">
+                                                <select class="form-select" v-model="task.status_id">
+                                                    <option disabled selected>Seleccionar</option>
+                                                    <option v-for="status in statuses" :key="status.id" :value="status.id">
+                                                        {{ status.name }}
+                                                    </option>
+                                                </select>
+                                                <label>Estatus</label>
+                                            </div>
+                                            <div v-if="!task.status_id" class="text-danger mt-1">Este campo es obligatorio.</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-3">
-                                        <div class="floating-label-select">
-                                            <select class="form-control" v-model="task.category_id">
-                                                <option disabled selected>Seleccionar</option>
-                                                <option v-for="category in categories" :key="category.id" :value="category.id">
-                                                    {{ category.description }}
-                                                </option>
-                                            </select>
-                                            <label for="grupo">Categoría de Tarea</label>
-                                            <div v-if="!task.category_id" class="text-danger">Este campo es obligatorio.</div>
+
+                                    <!-- Tipo de Tarea y Categoría -->
+                                    <div class="row g-3 mt-2 row-cols-md-2">
+                                        <div class="col">
+                                            <div class="form-floating">
+                                                <select class="form-select" v-model="task.task_type_id">
+                                                    <option disabled selected>Seleccionar</option>
+                                                    <option v-for="type in types" :key="type.id" :value="type.id">
+                                                        {{ type.name }}
+                                                    </option>
+                                                </select>
+                                                <label>Tipo de Tarea</label>
+                                            </div>
+                                            <div v-if="!task.task_type_id" class="text-danger mt-1">Este campo es obligatorio.</div>
+                                        </div>
+
+                                        <div class="col">
+                                            <div class="form-floating">
+                                                <select class="form-select" v-model="task.category_id">
+                                                    <option disabled selected>Seleccionar</option>
+                                                    <option v-for="category in categories" :key="category.id" :value="category.id">
+                                                        {{ category.description }}
+                                                    </option>
+                                                </select>
+                                                <label>Categoría</label>
+                                            </div>
+                                            <div v-if="!task.category_id" class="text-danger mt-1">Este campo es obligatorio.</div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Asignar a</label>
-                                    <select class="form-select" multiple v-model="task.assigned_users">
-                                        <option v-for="user in users" :key="user.id" :value="user.id">
-                                            {{ user.name }}
-                                        </option>
-                                    </select>
-                                    <small class="text-muted">Puedes seleccionar múltiples usuarios (Ctrl + Click).</small>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
-                            <button v-if="flag === 0" type="button" class="btn btn-primary" @click="createTask">Guardar</button>
-                            <button v-if="flag === 1" type="button" class="btn btn-primary" @click="updateTask">Editar</button>
+                                </form>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    <i class="bx bx-x"></i> Cerrar
+                                </button>
+                                <button v-if="flag === 0" type="button" class="btn btn-success" @click="createTask">
+                                    <i class="bx bx-save"></i> Guardar
+                                </button>
+                                <button v-if="flag === 1" type="button" class="btn btn-warning text-white" @click="updateTask">
+                                    <i class="bx bx-edit"></i> Editar
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Modal Share Task -->
+                <div class="modal fade" id="shareTaskModal" tabindex="-1" aria-labelledby="shareTaskModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="shareTaskModalLabel">Compartir Tarea</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form @submit.prevent="shareTask">
+                                    <!-- Lista de usuarios con checkboxes -->
+                                    <div class="form-group">
+                                        <label for="users">Seleccionar Usuarios</label>
+                                        <div v-for="user in users" :key="user.id" class="form-check">
+                                            <input
+                                                type="checkbox"
+                                                class="form-check-input"
+                                                :id="'user-' + user.id"
+                                                v-model="selectedUsers"
+                                                :value="user.id"
+                                                :checked="isUserAssigned(user.id)"
+                                            />
+                                            <label :for="'user-' + user.id" class="form-check-label">
+                                                {{ user.name }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <!-- Botón para guardar -->
+                                    <button type="submit" class="btn btn-primary mt-3">Compartir</button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            <!-- Fin del modal -->
         </div>
     </div>
-
     <loader v-if="cargandoCount > 0" />
-
 </template>
 
 <script>
@@ -247,7 +290,9 @@ export default {
         return {
             cargandoCount: 0,
             listTask: [],
-
+            tasksAboutToExpire: [],
+            filtro: '',
+            modalTitle: '',
             task: {
                 title: '',
                 description: '',
@@ -256,13 +301,16 @@ export default {
                 status_id: null,
                 task_type_id: null,
                 category_id: null,
-                assigned_users: []
             },
+            invalidDate: false,
             priorities: [],
             statuses: [],
             types: [],
             categories: [],
             users: [],
+            selectedUsers: [],
+            assignedUsers: [] ,
+            taskId: null,
             flag: 0,
         };
     },
@@ -278,6 +326,7 @@ export default {
     mounted() {
         this.getTasks();
         this.fetchOptions();
+        this.fetchAssignedUsers();
     },
 
     methods: {
@@ -304,6 +353,12 @@ export default {
                 this.incrementarCarga();
                 const response = await axios.get('/Dashboard/get');
                 this.listTask = response.data.data;
+                this.tasksAboutToExpire = response.data.tasksAboutToExpire;
+
+                if (this.tasksAboutToExpire.length > 0) {
+                    this.showAlert();
+                }
+
             } catch (error) {
                 if (error.response && error.response.data && error.response.data.message) {
                     Swal.fire('Error', error.response.data.message, 'error');
@@ -315,11 +370,32 @@ export default {
             }
         },
 
+        showAlert() {
+            let taskDetails = this.tasksAboutToExpire.map(task => {
+                return `${task.title} - Limite: ${task.due_date} |`;
+            }).join('\n');
+
+            Swal.fire({
+                title: '¡Tienes tareas por vencer!',
+                text: `Tienes ${this.tasksAboutToExpire.length} tarea(s) por vencer en los próximos 3 días:\n\n${taskDetails}`,
+                icon: 'warning',
+                confirmButtonText: 'Ver tareas'
+            });
+        },
+
+
         async createTask() {
             this.incrementarCarga();
 
             if (!this.task.title || !this.task.due_date || !this.task.priority_id || !this.task.status_id || !this.task.task_type_id || !this.task.category_id) {
                 Swal.fire('Error', 'Por favor complete todos los campos obligatorios.', 'error');
+                this.decrementarCarga();
+                return;
+            }
+
+            this.validateDueDate();
+            if (this.invalidDate) {
+                alert('La fecha de vencimiento no puede ser anterior a la actual.');
                 this.decrementarCarga();
                 return;
             }
@@ -332,7 +408,6 @@ export default {
                 status_id: this.task.status_id,
                 task_type_id: this.task.task_type_id,
                 category_id: this.task.category_id,
-                assigned_users: this.task.assigned_users
             };
 
             try {
@@ -358,6 +433,7 @@ export default {
 
         async editTask(id) {
             this.incrementarCarga();
+            this.modalTitle = "Editar Tarea";
             this.flag = 1;
             this.openModal();
 
@@ -375,9 +451,6 @@ export default {
                         status_id: response.data.data.status_id,
                         task_type_id: response.data.data.task_type_id,
                         category_id: response.data.data.category_id,
-                        assigned_users: response.data.data.user_assignments
-                            ? response.data.data.user_assignments.split(',').map(id => parseInt(id))
-                            : []
                     };
 
                 } else {
@@ -397,6 +470,13 @@ export default {
         async updateTask() {
             this.incrementarCarga();
 
+            this.validateDueDate();
+            if (this.invalidDate) {
+                alert('La fecha de vencimiento no puede ser anterior a la actual.');
+                this.decrementarCarga();
+                return;
+            }
+
             try {
                 const response = await axios.put(`/Dashboard/update/${this.task.id}`, {
                     title: this.task.title,
@@ -406,7 +486,6 @@ export default {
                     status_id: this.task.status_id,
                     task_type_id: this.task.task_type_id,
                     category_id: this.task.category_id,
-                    assigned_users: this.task.assigned_users.join(',') // Convertimos el array a string separado por comas
                 });
 
                 if (response.data.task) {
@@ -461,7 +540,6 @@ export default {
             }
         },
 
-
         async fetchOptions() {
             this.incrementarCarga();
             try {
@@ -470,7 +548,7 @@ export default {
                     axios.get('/Status/get'),
                     axios.get('/Types/get'),
                     axios.get('/Categories/get'),
-                    axios.get('/Users/get')
+                    axios.get('/Dashboard/getU'),
                 ]);
 
                 this.priorities = prioritiesRes.data.data;
@@ -489,8 +567,14 @@ export default {
             };
         },
 
+        validateDueDate() {
+            const today = new Date().toISOString().split("T")[0]; // Obtiene la fecha actual (YYYY-MM-DD)
+            this.invalidDate = this.task.due_date < today;
+        },
+
         nuevo() {
             this.resetForm();
+            this.modalTitle = "Nueva Tarea";
             this.flag = 0;
             this.openModal();
         },
@@ -517,6 +601,62 @@ export default {
             $("#modal").modal("hide");
         },
 
+
+        isUserAssigned(userId) {
+            return this.assignedUsers.includes(userId);
+        },
+
+        async shareTask() {
+            try {
+                const response = await axios.post('/Dashboard/shareTask', {
+                    task_id: this.taskId,
+                    user_ids: this.selectedUsers,
+                });
+
+                if (response.data.message) {
+                    Swal.fire('Éxito', response.data.message, 'success');
+                    this.closeModalshareTask();  // Cerrar el modal
+                }
+            } catch (error) {
+                this.closeModalshareTask();
+                if (error.response && error.response.data && error.response.data.message) {
+                    Swal.fire('Error', error.response.data.message, 'error');
+                } else {
+                    Swal.fire('Error', 'Se produjo un error al compartir la tarea.', 'error');
+                }
+            }
+        },
+
+        async shareTaskModal(taskId) {
+            this.taskId = taskId;
+            this.selectedUsers = [];
+
+            await this.fetchAssignedUsers();
+
+            // Luego abrimos el modal
+            this.openModalshareTask();
+        },
+
+        async fetchAssignedUsers() {
+            try {
+                const response = await axios.get(`/Dashboard/getAssigned/${this.taskId}`);
+                this.assignedUsers = response.data;  // Asigna los usuarios ya asignados
+                this.selectedUsers = [...this.assignedUsers];  // Preselecciona los usuarios
+            } catch (error) {
+                console.error('Error al obtener los usuarios asignados', error);
+            }
+        },
+
+        openModalshareTask() {
+            $("#shareTaskModal").modal({ backdrop: "static", keyboard: false });
+            $("#shareTaskModal").modal("toggle");
+        },
+
+        closeModalshareTask() {
+            $("#shareTaskModal").modal("hide");
+        },
+
+
         formatDate(date) {
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             return new Date(date).toLocaleDateString('es-ES', options);
@@ -525,12 +665,6 @@ export default {
         getNameById(list, id) {
             const item = list.find(element => element.id === id);
             return item ? item.description || item.name : 'No especificado';
-        },
-
-        getUserNameById(users, id) {
-
-            const user = users.find(user => user.id === id);
-            return user ? user.name : 'Usuario no encontrado';
         },
 
         getPriorityClass(priority) {
@@ -609,25 +743,10 @@ export default {
     white-space: normal;
 }
 
-.table {
-    width: 100%;
-    margin-top: 20px;
-    border-collapse: collapse;
-}
-
-.table th,
+table th,
 .table td {
     padding: 12px;
     text-align: left;
-}
-
-.table th {
-    background-color: #f8f9fa;
-    font-weight: bold;
-}
-
-.table td {
-    border-bottom: 1px solid #ddd;
 }
 
 .btn-edit {

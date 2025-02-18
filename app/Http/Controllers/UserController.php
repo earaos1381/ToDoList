@@ -17,20 +17,6 @@ use Exception;
 class UserController extends Controller
 {
 
-    /* public function Obtenerpermisos()
-    {
-        $idUser = Auth::user()->id;
-        $list_users = User::select('permissions.name')
-            ->join('model_has_roles', 'model_has_roles.model_id', '=', 'users.id')
-            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-            ->join('role_has_permissions', 'role_has_permissions.role_id', '=', 'roles.id')
-            ->join('permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
-            ->where('model_has_roles.model_id', $idUser)
-            ->get();
-        return $list_users;
-
-    } */
-
     public function index()
     {
         return view('public.login');
@@ -276,20 +262,6 @@ class UserController extends Controller
         return response()->json(['roles' => $rolesAsignados]);
     }
 
-    public function verificarRol()
-    {
-        $usuario = Auth::user();
-        if ($usuario) {
-
-            if ($usuario->hasAnyRole(['Administrador', 'Root'])) {
-                return 'Administrador';
-            } else {
-                return 'Otro';
-            }
-        } else {
-            return 'Usuario no autenticado';
-        }
-    }
 
     public function password()
     {
@@ -305,11 +277,6 @@ class UserController extends Controller
 
     public function actualizarPassword(Request $request)
     {
-        // $request->validate([
-        //     'currentPassword' => 'required|string',
-        //     'newPassword' => 'required|string|min:8',
-        //     'confirmPassword' => 'required|string|same:newPassword',
-        // ]);
 
         $request->validate([
             'currentPassword' => 'required|string',

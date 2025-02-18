@@ -1,66 +1,113 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Aplicación ToDoList
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Esta es una aplicación ToDoList construida con Laravel y Vue.js. La aplicación te permite gestionar tus tareas, crear nuevas, marcarlas como completadas y organizarlas de manera eficiente. La aplicación está completamente containerizada usando Docker para una fácil configuración y despliegue.
 
-## About Laravel
+## Características
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Gestión de tareas (Agregar, Editar, Eliminar, Cambio de Estado)
+- Autenticación y registro de usuarios
+- Compartir tareas entre usuarios
+- Notifiacion en tiempo real de tareas por vencer
+- Construida con Laravel (Backend) y Vue.js (Frontend)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requisitos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Antes de comenzar, asegúrate de tener lo siguiente instalado:
 
-## Learning Laravel
+- Docker
+- Docker Compose
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Instalación y Configuración
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Descargar la Imagen desde Docker Hub
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Para ejecutar la aplicación localmente usando Docker, primero necesitas descargar la imagen desde Docker Hub. Abre tu terminal y ejecuta:
 
-## Laravel Sponsors
+docker pull eac1381/todolist
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2. Ejecutar la Aplicación con Docker Compose
 
-### Premium Partners
+Una vez descargada la imagen, puedes iniciar la aplicación usando Docker Compose. En tu terminal, navega hasta el directorio donde quieres ejecutar el proyecto y crea un archivo `docker-compose.yml` con el siguiente contenido:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+version: '3.8'
 
-## Contributing
+services:
+  app:
+    image: eac1381/todolist2:latest
+    container_name: todolist_app
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=todolist
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    depends_on:
+      - db
+    volumes:
+      - .:/var/www/html
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+  db:
+    image: mariadb:10.5
+    container_name: todolist_db
+    environment:
+      MYSQL_DATABASE: todolist
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./bd.sql:/docker-entrypoint-initdb.d/bd.sql
+volumes:
+  dbdata:
 
-## Code of Conduct
+  ### 3. Ejecutar la Aplicación
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Una vez que tengas listo el archivo `docker-compose.yml`, ejecuta el siguiente comando en el mismo directorio donde se encuentra el archivo:
 
-## Security Vulnerabilities
+docker-compose up
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 4. Acceder a la Aplicación
 
-## License
+Cuando los contenedores estén en funcionamiento, podrás acceder a la aplicación ToDoList en tu navegador, usando la siguiente URL:
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+http://localhost:8000
+
+### 5. Detener y Eliminar los Contenedores
+
+Cuando hayas terminado de trabajar con la aplicación y quieras detener los contenedores, ejecuta el siguiente comando:
+
+docker-compose down
+
+
+
+## Decisiones Técnicas
+
+### 1. **Control de Roles y Permisos**
+
+Se implementaron las bibliotecas **Spatie** y **Sectum** para gestionar los roles, permisos y actividades de los usuarios. Esta decisión se tomó con el fin de garantizar un control granular sobre qué acciones pueden realizar los usuarios, brindando así un sistema más seguro y flexible.
+
+- **Spatie** fue utilizado para la gestión de permisos y roles, permitiendo definir de manera clara y eficiente qué operaciones puede realizar cada usuario dentro de la aplicación.
+- **Sectum** se integró para registrar y monitorear las actividades de los usuarios, lo que permite llevar un control detallado de las acciones realizadas por cada uno.
+
+### 2. **Uso de Prefijos en los Endpoints**
+
+Se decidió aplicar un prefijo a todos los endpoints de la API por razones de seguridad y organización. Esta práctica facilita la gestión de las rutas y proporciona una capa adicional de seguridad al prevenir conflictos y al permitir un mejor control sobre las rutas públicas y privadas.
+
+### 3. **Uso de MariaDB como Base de Datos**
+
+Para la base de datos, se optó por **MariaDB** debido a su estabilidad, rendimiento y compatibilidad con MySQL, lo que la convierte en una opción confiable para aplicaciones que requieren una base de datos relacional robusta.
+
+- **MariaDB** es compatible con todas las funciones que ofrece MySQL, pero con mejoras en el rendimiento y la seguridad. 
+- La base de datos se gestiona dentro de un contenedor Docker, lo que permite un entorno aislado y fácilmente reproducible.
+
+### 4. **Arquitectura Modelo-Vista-Controlador (MVC)**
+
+La aplicación está estructurada utilizando el patrón de diseño **Modelo-Vista-Controlador (MVC)**, que separa la lógica de la aplicación en tres componentes principales:
+
+- **Modelo (Model)**: La capa que maneja la lógica de negocio y la interacción con la base de datos. En este caso, el modelo está diseñado para trabajar con MariaDB y proporciona las funciones necesarias para realizar operaciones sobre los datos.
+- **Vista (View)**: La capa que se encarga de mostrar la información al usuario. En este proyecto, se utilizó **Vue.js** para crear interfaces de usuario interactivas y dinámicas.
+- **Controlador (Controller)**: La capa intermediaria entre el modelo y la vista, que procesa las solicitudes del usuario y responde con la vista adecuada. Los controladores gestionan las peticiones y ejecutan las operaciones necesarias en el modelo, retornando la información correspondiente a la vista.

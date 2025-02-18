@@ -127,8 +127,24 @@
 <script>
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import loader from '../../components/loader.vue';
 
 export default {
+
+    components: {
+        loader,
+    },
+
+    props: {
+        rolesGranted: {
+            type: Array,
+            default: () => []
+        },
+        permisosGranted: {
+            type: Array,
+            default: () => []
+        },
+    },
 
     data() {
 
@@ -202,9 +218,13 @@ export default {
 
     methods: {
 
+        hasPermission(permiso) {
+            return this.permisosGranted.includes(permiso);
+        },
+
 
         obtenerPermisos() {
-            axios.get('/obtenerPermisos')
+            axios.get('/Permission/obtenerPermisos')
                 .then((response) => {
                     if (response.data.permiso) {
                         this.permisos = response.data.permiso;
@@ -229,7 +249,7 @@ export default {
         },
 
         agregarPermiso() {
-            axios.post('/agregarPermisos', { name: this.name })
+            axios.post('/Permission/agregarPermisos', { name: this.name })
                 .then(response => {
                     if (response.data.success) {
                         Swal.fire('Éxito', response.data.message, 'success');
@@ -254,7 +274,7 @@ export default {
         this.bandera = 1;
         this.abrirModal();
 
-        axios.get("/detallePermiso/" + idPerm)
+        axios.get("/Permission/detallePermiso/" + idPerm)
             .then((response) => {
                 const permiso = response.data[0];
                 this.name = permiso.name;
@@ -275,7 +295,7 @@ export default {
                 name: this.name,
             };
 
-            axios.put(`/editarPermiso`, data)
+            axios.put(`/Permission/editarPermiso`, data)
                 .then((response) => {
                     if (response.data.success) {
                         Swal.fire('Éxito', response.data.message, 'success');
@@ -310,7 +330,7 @@ export default {
 
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        axios.delete("/eliminarPermiso/" + idPerm)
+                        axios.delete("/Permission/eliminarPermiso/" + idPerm)
                         .then(response => {
 
                             Swal.fire('Éxito', response.data.message, 'success');

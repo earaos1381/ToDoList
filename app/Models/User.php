@@ -46,19 +46,10 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-     // Relación con las tareas donde es propietario
-     public function ownedTasks()
-     {
-         return $this->hasMany(TaskAssignment::class, 'user_id')
-                     ->where('role', 'owner')
-                     ->with('task');
-     }
+    public function tasks()
+    {
+        return $this->hasMany(Task::class, 'user_assignments');
+    }
 
-     // Relación con las tareas donde está asignado
-     public function assignedTasks()
-     {
-         return $this->hasMany(TaskAssignment::class, 'user_id')
-                     ->where('role', 'assigned')
-                     ->with('task');
-     }
+
 }

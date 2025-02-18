@@ -4,25 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Priority;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
 class PriorityController extends Controller
 {
-
-    public function priorities()
-    {
-        $roles = session('user_role', []);
-        $permisos = session('user_permisos', []);
-
-        return view('admin.universidades', [
-            'rolesGranted' => $roles,
-            'permisosGranted' => $permisos,
-        ]);
-    }
 
     public function get()
     {

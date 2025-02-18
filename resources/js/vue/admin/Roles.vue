@@ -177,11 +177,11 @@ export default {
     },
 
     props: {
-        roles: {
+        rolesGranted: {
             type: Array,
             default: () => []
         },
-        permisos: {
+        permisosGranted: {
             type: Array,
             default: () => []
         },
@@ -192,7 +192,7 @@ export default {
         return {
             filtro: '',
             rolesM: [],
-            permisosM: [],
+            permisos: [],
             selectedPermisos: [],
             userPermissions: {},
             pagina: 1,
@@ -263,7 +263,7 @@ export default {
 
         /* Método para gestionar permisos */
         hasPermission(permiso) {
-            return this.permisos.includes(permiso);
+            return this.permisosGranted.includes(permiso);
         },
 
 
@@ -305,10 +305,10 @@ export default {
 
 
         obtenerPermisos() {
-            axios.get('/obtenerPermisos')
+            axios.get('/Permission/obtenerPermisos')
                 .then((response) => {
                     if (response.data.permiso) {
-                        this.permisosM = response.data.permiso;
+                        this.permisos = response.data.permiso;
                         this.calcularTotalPaginas();
                     } else {
                         Swal.fire('Error', response.data.message, 'error');
@@ -325,7 +325,7 @@ export default {
 
         /* Metodos de Roles */
         obtenerRoles() {
-            axios.get('/obtenerRoles')
+            axios.get('/Roles/obtenerRoles')
                 .then((response) => {
                     if (response.data.role) {
                         this.rolesM = response.data.role;
@@ -344,7 +344,7 @@ export default {
         },
 
         agregarRol() {
-            axios.post('/agregarRol', { name: this.name })
+            axios.post('/Roles/agregarRol', { name: this.name })
                 .then(response => {
                     if (response.data.success) {
                         Swal.fire('Éxito', response.data.message, 'success');
@@ -370,7 +370,7 @@ export default {
         this.bandera = 1;
         this.abrirModalRol();
 
-        axios.get("/detalleRol/" + idRol)
+        axios.get("/Roles/detalleRol/" + idRol)
             .then((response) => {
                 const evento = response.data[0];
                 this.name = evento.name;
@@ -391,7 +391,7 @@ export default {
                 name: this.name,
             };
 
-            axios.put(`/editarRol`, data)
+            axios.put(`/Roles/editarRol`, data)
                 .then((response) => {
                     if (response.data.success) {
                         Swal.fire('Éxito', response.data.message, 'success');
@@ -425,7 +425,7 @@ export default {
 
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        axios.delete("/eliminarRol/" + idRol)
+                        axios.delete("/Roles/eliminarRol/" + idRol)
                         .then(response => {
 
                             Swal.fire('Éxito', response.data.message, 'success');
@@ -460,9 +460,9 @@ export default {
         this.idRolSeleccionado = idPerm;
         this.abrirModalPermiso();
 
-        axios.get(`/obtenerPermisosRol/${this.idpe}`)
+        axios.get(`/Roles/obtenerPermisosRol/${this.idpe}`)
                 .then((response) => {
-                const permisosAsignados = response.data.permisosM;
+                const permisosAsignados = response.data.permisos;
 
                 const permisosArray = Array.isArray(permisosAsignados)
                     ? permisosAsignados
@@ -485,10 +485,10 @@ export default {
                 });
 
 
-        axios.get('/obtenerPermisos')
+        axios.get('/Permission/obtenerPermisos')
             .then((response) => {
                     if (response.data.permiso) {
-                        this.permisosM = response.data.permiso;
+                        this.permisos = response.data.permiso;
 
                     } else {
                         Swal.fire('Error', response.data.message, 'error');
@@ -506,7 +506,7 @@ export default {
         asignarPermiso() {
             const idRol = this.idRolSeleccionado;
 
-            axios.post('/asignarpermisos', { idRol, selectedPermisos: this.selectedPermisos })
+            axios.post('/Roles/asignarpermisos', { idRol, selectedPermisos: this.selectedPermisos })
                 .then(response => {
                     if (response.data.success) {
                         Swal.fire('Éxito', response.data.message, 'success');

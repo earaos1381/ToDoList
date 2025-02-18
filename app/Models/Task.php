@@ -16,4 +16,11 @@ class Task extends Model
         'status_id', 'task_type_id', 'category_id', 'user_assignments'
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_assignments');
+    }
+
+    
+
 }

@@ -3,6 +3,6 @@
 
 @section('content')
     <div id="app">
-        <roles-vue :roles="{{ json_encode($roles) }}" :permisos="{{ json_encode($permisos) }}" />
+        <roles-vue :roles-granted="{{ json_encode($rolesGranted) }}" :permisos-granted="{{ json_encode($permisosGranted) }}" />
     </div>
 @endsection

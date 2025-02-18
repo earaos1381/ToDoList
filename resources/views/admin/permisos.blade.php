@@ -3,6 +3,6 @@
 
 @section('content')
     <div id="app">
-        <permisos-vue></permisos-vue>
+        <permisos-vue :roles-granted="{{ json_encode($rolesGranted) }}" :permisos-granted="{{ json_encode($permisosGranted) }}" />
     </div>
 @endsection

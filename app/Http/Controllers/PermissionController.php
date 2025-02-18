@@ -11,7 +11,13 @@ class PermissionController extends Controller
 {
     public function permisos()
     {
-        return view('admin.permisos');
+        $roles = session('user_role', []);
+        $permisos = session('user_permisos', []);
+
+        return view('admin.permisos', [
+            'rolesGranted' => $roles,
+            'permisosGranted' => $permisos,
+        ]);
     }
 
     public function obtenerPermisos()
@@ -98,7 +104,7 @@ class PermissionController extends Controller
                     'message' => 'No se puede eliminar el permiso porque está asociado con uno o más roles.'
                 ], 400);
             }
-            
+
             $permission->delete();
 
             return response()->json(['success' => true, 'message' => 'Permiso eliminado correctamente']);

@@ -58,14 +58,6 @@
                 </ul>
             </li>
 
-            <!-- Respaldo -->
-            <li class="menu-item" id="backup-link">
-                <a href="{{ route('respaldos') }}" class="menu-link">
-                    <i class="menu-icon tf-icons bx bxs-save"></i>
-                    <div data-i18n="Analytics">Respaldos</div>
-                </a>
-            </li>
-
             <!-- Logs -->
             <li class="menu-item" id="log-link">
                 <a href="{{ route('logs') }}" class="menu-link" target="_blank">
